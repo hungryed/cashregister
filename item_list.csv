@@ -1,0 +1,7 @@
+SKU,item_flavor,item_style,purchase_price,retail_price
+1111111,"Vanilla","Light",5,2
+1111112,"Vanilla","Medium",7.25,3.50
+1111113,"Vanilla","Bold",9.5,4
+2222221,"Hazelnut","Light",6,2.50
+2222222,"Hazelnut","Medium",8.25,4
+2222223,"Hazelnut","Bold",10.5,5

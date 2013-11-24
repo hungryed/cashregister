@@ -40,20 +40,21 @@ class Register
   end
 
   def subtotal(strength, flavor, amount)
-    @transaction[:Subtotal] += amount.to_i * @item_list["#{strength} #{flavor}"][:purchase_price].to_f
-    puts "Subtotal: $#{format_money(@transaction[:Subtotal])}"
+    @transaction["Subtotal"] += amount.to_i * @item_list["#{strength} #{flavor}"][:purchase_price].to_f
+    @transaction["Retail_price"] += amount.to_i * @item_list["#{strength} #{flavor}"][:retail_price].to_f
+    puts "Subtotal: $#{format_money(@transaction["Subtotal"])}"
   end
 
   def final_subtotal(hash)
-    puts "Your total is $#{format_money(hash[:Subtotal])}"
-    hash[:Subtotal]
+    puts "Your total is $#{format_money(hash["Subtotal"])}"
+    hash["Subtotal"]
   end
 
   def reset
     @transaction = Hash.new(0)
-    @transaction[:Subtotal] = 0
+    @transaction["Subtotal"] = 0
     @all_items.each do |name|
-      @transaction[name.to_sym] = 0
+      @transaction[name.to_s] = 0
     end
   end
 
@@ -92,7 +93,7 @@ class Register
   end
 
   def flavor_maker(strength, flavor)
-    "#{strength} #{flavor}".to_sym
+    "#{flavor} #{strength}"
   end
 
   def get_the_flavor
@@ -152,8 +153,8 @@ class Register
     customer_payment = question("What is the amount tendered?: ")
     difference = (customer_payment.to_f - amount_due.to_f)
     final_customer_payment = final_payment_checker(difference, customer_payment)
-    @transaction[:date_of_transaction] = Time.local(Time.now.year, Time.now.month, Time.now.day)
-    @transaction[:customer_payment] = final_customer_payment
+    @transaction["date_of_transaction"] = Time.now
+    @transaction["customer_payment"] = final_customer_payment
   end
 
   def customer_transaction

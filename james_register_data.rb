@@ -3,7 +3,8 @@ require './james_data_realm.rb'
 require 'csv'
 require 'pry'
 require 'json'
-
+require 'date'
+require 'table_print'
 class DataRegistry
 
   def initialize
@@ -51,7 +52,8 @@ class DataRegistry
 
   def enter_the_data_realm
     manager = DataRealm.new
-    manager.initialize
+    manager.initial_display
+    sleep(8)
     initial_decision
   end
 
@@ -70,8 +72,19 @@ class DataRegistry
     data
   end
 
+  def evaluation(arg1, arg2)
+    if (arg1.length rescue 0) == 0
+      return true
+    elsif arg1.join("") != arg2.first.keys.join("")
+      return true
+    else
+      return false
+    end
+  end
+
   def write_to_file(data_to_insert)
     CSV.open('coffee_transactions.csv', 'a+') do |writer|
+      writer << data_to_insert.first.keys if evaluation(writer.first, data_to_insert)
       data_to_insert.each do |transaction|
         writer << transaction.values
       end

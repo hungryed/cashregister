@@ -1,6 +1,6 @@
-require 'pry'
-require 'csv'
-require 'json'
+# require 'pry'
+# require 'csv'
+# require 'json'
 
 class DataRealm
 
@@ -15,10 +15,11 @@ class DataRealm
     puts "1) List sales for a certain date"
     puts "2) List sales for a range of dates"
     puts "3) Check profits"
-    puts "4) Check item sales for a range of dates"
+    puts "4) Check profits for a range of dates"
+    puts "5) Check item sales for a range of dates"
     decision = questioner("What would you like to do?: ")
-        reset
-    decision
+    reset
+    course_of_action(decision.to_i)
   end
 
   def make_item_list
@@ -31,6 +32,137 @@ class DataRealm
     end
   end
 
+  def format_money(amount)
+    sprintf('%0.02f', amount.to_f)
+  end
+
+  def data_without_certain_ele(array, arg1=nil, arg2=nil, arg3=nil, arg4=nil)
+    elements_to_ignore = [arg1.to_sym, arg2.to_sym, arg3.to_sym, arg4.to_sym]
+    array_to_table = []
+    array.each do |transaction|
+      hash_to_table = Hash.new(0)
+      transaction.each do |key, value|
+        total_items = []
+        if elements_to_ignore.include?(key.to_sym)
+          hash_to_table[key] = value
+          next
+        else
+          total_items << value.to_i
+        end
+        hash_to_table["Total items"] += total_items.inject(:+)
+      end
+      array_to_table << hash_to_table
+    end
+    array_to_table
+  end
+
+  def data_extract(array, argument)
+    array_for_output = []
+    array.each do |transaction|
+      array_for_output << transaction[argument.to_sym].to_f
+    end
+    array_for_output
+  end
+
+  def specific_date_sales(array)
+    total = data_extract(array, "subtotal")
+    retail_total = data_extract(array, "retail_price")
+    total = total.inject(:+)
+    retail_total = retail_total.inject(:+)
+    profits = total - retail_total
+    puts "Gross sales for the day: $#{format_money(total)}"
+    puts "Net profit for the day: $#{format_money(profits)}"
+  end
+
+  def sales_getter(arg1, arg2)
+    @all_current_sales.find_all do |hash|
+      tran_time = Date.parse(hash[:date_of_transaction]).to_time
+      tran_time.between?(arg1.to_time, arg2.to_time)
+    end
+  end
+
+  def specific_sale_date
+    desired_date = date_getter("What date would you like to see?: ")
+    all_sales_on_date = sales_getter(desired_date.to_time, desired_date.to_time + 86400)
+    if all_sales_on_date.length >= 1
+      tp data_without_certain_ele(all_sales_on_date, "subtotal", "retail_price", "date_of_transaction", "customer_payment")
+      specific_date_sales(all_sales_on_date)
+    else
+      puts "Not found"
+    end
+  end
+
+  def ranged_sale_date
+    start_date = date_getter("What date do you wish to start at?: ")
+    end_date = range_date_getter("What date do you wish to end at?: ")
+    sales_between = sales_getter(start_date, end_date)
+    if sales_between.length >= 1
+      tp data_without_certain_ele(sales_between, "subtotal", "retail_price", "date_of_transaction", "customer_payment")
+      specific_date_sales(sales_between)
+      total_profit(sales_between)
+    else
+      puts "Not found"
+    end
+  end
+
+  def total_profit(array)
+    binding.pry
+
+  end
+
+  def range_date_getter(question_to_ask)
+    puts "Please put date in month-day-year format"
+    date = questioner(question_to_ask)
+    date << " 05:00:00"
+    date = DateTime.strptime(date, "%m-%d-%Y %H:%M:%S") rescue nil
+    if date != nil
+      if date.to_time > Time.now
+        date = Time.now
+      else
+        return date
+      end
+    else
+      puts "Please enter a valid date format"
+      date_getter(question_to_ask)
+    end
+  end
+
+  def date_getter(question_to_ask)
+    puts "Please put date in month-day-year format"
+    date = questioner(question_to_ask)
+    date << " 05:00:00"
+    date = DateTime.strptime(date, "%m-%d-%Y %H:%M:%S") rescue nil
+    if date != nil
+      if date.to_time > Time.now
+        puts "That date is in the future"
+        date_getter(question_to_ask)
+      else
+        return date
+      end
+    else
+      puts "Please enter a valid date format"
+      date_getter(question_to_ask)
+    end
+  end
+
+  def course_of_action(input)
+    if input == 1
+      specific_sale_date
+    elsif input == 2
+      ranged_sale_date
+    elsif input == 3
+
+    elsif input == 4
+
+    elsif input == 5
+
+    else
+      puts "Please enter a valid request"
+      sleep(3)
+      initial_display
+    end
+  end
+
   def reset
     @item_list ={}
     make_item_list
@@ -38,12 +170,14 @@ class DataRealm
   end
 
   def get_current_data
-    @current_sales = []
-    data = CSV.foreach('coffee_transactions.csv', headers: true)
-        binding.pry
-    data = JSON.parse(data)
-
-    data
+    @all_current_sales = []
+    CSV.foreach('coffee_transactions.csv', headers: true, header_converters: :symbol) do |sale|
+      current_sale = {}
+      sale.each do |key,value|
+        current_sale[key] = value
+      end
+      @all_current_sales << current_sale
+    end
   end
 
   def questioner(question)
@@ -57,5 +191,5 @@ class DataRealm
 
 end
 
-manager = DataRealm.new
-manager.initial_display
+# manager = DataRealm.new
+# manager.initial_display

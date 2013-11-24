@@ -112,6 +112,14 @@ class DataRealm
     subtotal = array1.inject(:+)
     retail_total = array2.inject(:+)
     item_total = array3.inject(:+)
+    array_of_inputs = [subtotal, retail_total, item_total]
+    array_of_inputs.each do |array|
+      if array == nil
+        array = 0
+      else
+        next
+      end
+    end
     puts "Total sales over span: $#{subtotal}"
     puts "Total profit: $#{subtotal - retail_total}"
     puts "Total items sold: #{item_total}"

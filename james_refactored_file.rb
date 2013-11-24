@@ -132,7 +132,7 @@ class Register
   end
 
   def final_payment_checker(amount, customer_payment)
-    if amount.to_i >= 0
+    if amount.to_f > 0 || amount.to_f == 0
       puts "    ===Thank You!=== \n
   The total change due is $#{format_money(amount)} \n \n
   #{Time.now.strftime("%m/%d/%Y   %l:%M")}\n
@@ -151,10 +151,15 @@ class Register
 
   def payment_transaction(amount_due)
     customer_payment = question("What is the amount tendered?: ")
-    difference = (customer_payment.to_f - amount_due.to_f)
-    final_customer_payment = final_payment_checker(difference, customer_payment)
-    @transaction["date_of_transaction"] = Time.now
-    @transaction["customer_payment"] = final_customer_payment
+    if customer_payment.split(".")[1].length > 2
+      puts "Please enter a valid amount"
+      payment_transaction(amount_due)
+    else
+      difference = (customer_payment.to_f - amount_due.to_f)
+      final_customer_payment = final_payment_checker(difference, customer_payment)
+      @transaction["date_of_transaction"] = Time.now
+      @transaction["customer_payment"] = final_customer_payment
+    end
   end
 
   def customer_transaction

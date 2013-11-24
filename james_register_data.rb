@@ -5,6 +5,7 @@ require 'pry'
 require 'json'
 require 'date'
 require 'table_print'
+
 class DataRegistry
 
   def initialize

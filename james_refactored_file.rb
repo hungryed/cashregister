@@ -1,5 +1,3 @@
-# require 'csv'
-# require 'pry'
 
 class Register
 
@@ -17,12 +15,12 @@ class Register
     end
   end
 
-  def make_flavor_list(row)
-    if @flavor_options.include?(row[:item_flavor])
-      true
-    else
-      @flavor_options << row[:item_flavor]
+  def make_flavor_list(strength)
+    options = []
+    @item_list.each do |key,value|
+      options << key.split.last if key.include?(strength)
     end
+    options.uniq
   end
 
   def make_item_list
@@ -32,7 +30,6 @@ class Register
           purchase_price:row[:purchase_price],
           retail_price:row[:retail_price]
       }
-      make_flavor_list(row)
       make_strength_list(row)
     end
     @item_list
@@ -96,18 +93,19 @@ class Register
     "#{flavor} #{strength}"
   end
 
-  def get_the_flavor
-    flavor = question("What flavor did you purchase?(#{display_joiner(@flavor_options)}): ")
+  def get_the_flavor(strength)
+    flavor = question("What flavor did you purchase?(#{display_joiner(make_flavor_list(strength))}): ")
     flavor.capitalize!
-    if @flavor_options.include?(flavor)
+    if make_flavor_list(strength).include?(flavor)
       flavor
     else
       puts 'Please supply a valid flavor'
-      get_the_flavor
+      get_the_flavor(strength)
     end
   end
 
   def get_the_strength
+    puts "Type done if your order is complete"
     robustness = question("What level of coffee did you get?(#{display_joiner(@strength_options)}): ")
     return false if robustness == "done"
     robustness.capitalize!
@@ -151,14 +149,14 @@ class Register
 
   def payment_transaction(amount_due)
     customer_payment = question("What is the amount tendered?: ")
-    if customer_payment.split(".")[1].length > 2
-      puts "Please enter a valid amount"
-      payment_transaction(amount_due)
-    else
+    if check_input(customer_payment)
       difference = (customer_payment.to_f - amount_due.to_f)
       final_customer_payment = final_payment_checker(difference, customer_payment)
       @transaction["date_of_transaction"] = Time.now
       @transaction["customer_payment"] = final_customer_payment
+    else
+      puts "Please enter a valid amount"
+      payment_transaction(amount_due)
     end
   end
 
@@ -169,7 +167,7 @@ class Register
     while true
       strength = get_the_strength
       break if strength == false
-      flavor = get_the_flavor
+      flavor = get_the_flavor(strength)
       amount = get_the_amount(flavor, strength)
       puts subtotal(strength, flavor, amount)
     end
@@ -178,6 +176,3 @@ class Register
     @transaction
   end
 end
-
-# james = Register.new
-# james.customer_transaction

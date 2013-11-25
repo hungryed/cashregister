@@ -1,6 +1,3 @@
-# require 'pry'
-# require 'csv'
-# require 'json'
 
 class DataRealm
 
@@ -84,7 +81,7 @@ class DataRealm
     all_sales_on_date = sales_getter(desired_date.to_time, desired_date.to_time + 86400)
     if all_sales_on_date.length >= 1
       tp data_without_certain_ele(all_sales_on_date, "subtotal", "retail_price", "date_of_transaction", "customer_payment")
-      specific_date_sales(all_sales_on_date)
+      range_total_profit(all_sales_on_date)
     else
       puts "Not found"
     end
@@ -100,7 +97,7 @@ class DataRealm
       sales_between = sales_getter(start_date, end_date)
       if sales_between.length >= 1
         tp data_without_certain_ele(sales_between, "subtotal", "retail_price", "date_of_transaction", "customer_payment")
-        specific_date_sales(sales_between)
+        # specific_date_sales(sales_between)
         range_total_profit(sales_between)
       else
         puts "Not found"
@@ -120,8 +117,8 @@ class DataRealm
         next
       end
     end
-    puts "Total sales over span: $#{subtotal}"
-    puts "Total profit: $#{subtotal - retail_total}"
+    puts "Total sales over span: $#{format_money(subtotal)}"
+    puts "Total profit: $#{format_money(subtotal - retail_total)}"
     puts "Total items sold: #{item_total}"
   end
 
@@ -136,8 +133,8 @@ class DataRealm
     range_item_total = []
     array.each do |transaction|
       transaction.each do |key, value|
-        range_subtotal << transaction[key].to_i if key == :subtotal
-        range_retail_price << transaction[key].to_i if key == :retail_price
+        range_subtotal << transaction[key].to_f if key == :subtotal
+        range_retail_price << transaction[key].to_f if key == :retail_price
         if elements_to_ignore.include?(key)
           next
         else
@@ -185,12 +182,10 @@ class DataRealm
 
   def specific_product_hash_item_maker(array)
     items = {}
-    items["Light Vanilla"] = data_extract(array, "light_vanilla")
-    items["Medium Vanilla"] = data_extract(array, "medium_vanilla")
-    items["Bold Vanilla"] = data_extract(array, "bold_vanilla")
-    items["Light Hazelnut"] = data_extract(array, "light_hazelnut")
-    items["Medium Hazelnut"] = data_extract(array, "medium_hazelnut")
-    items["Bold Hazelnut"] = data_extract(array, "bold_hazelnut")
+    @item_list.each do |key, value|
+      key_tran = key.downcase.split.join("_")
+      items[key] = data_extract(array, key_tran)
+    end
     output = {}
     items.each do |key,value|
       output[key] = value.inject(:+).to_i
@@ -215,20 +210,9 @@ class DataRealm
         }
       end
       output.each do |key,value|
-        # puts "#{key}: "
-        # value.each do |key, value|
-        #   print "\t #{key}: "
-        #   if value != :"total_sold"
-        #     puts "#{value}"
-        #   else
-        #     puts "$#{value}"
-        #   end
-        # end
-        # puts "-----------"
         puts "#{key}:"
         tp value
         puts "---------------------------"
-        puts
         puts
       end
       range_total_profit(all_sales_on_date)
@@ -277,5 +261,3 @@ class DataRealm
 
 end
 
-# manager = DataRealm.new
-# manager.initial_display
